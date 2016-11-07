@@ -131,6 +131,11 @@ class SearchConsole extends \BackendModule
                                 if($activeModule != null) {
                                     $linkString .= ' | ';
                                 }
+
+                                if(!$links[$i]['label'] || strlen($links[$i]['label']) == 1) {
+                                    $links[$i]['label'] = $links[$i]['module'];
+                                }
+
                                 $linkString.= $links[$i]['label'].':';
                                 $activeModule = $links[$i]['module'];
                             } else {
