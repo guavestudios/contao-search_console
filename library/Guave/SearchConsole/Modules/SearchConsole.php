@@ -144,18 +144,30 @@ class SearchConsole extends \BackendModule
                                 }
                             }
 
-                            if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 4) { //display child record
-                                $linkString .= ' 
+
+                            \Controller::loadDataContainer($links[$i]['tableName']);
+                            if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
+                                $linkString .= '
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . str_replace('tl_', '', $pTable)
-                                    . '&table=tl_'.$links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
+                                    . '&table=tl_' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
+                                    . '&ref=' . TL_REFERER_ID
+                                    . '&rt=' . \RequestToken::get() . '">'
+                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . '</a>';
+                            } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
+                                $linkString .= '
+                                <a '
+                                    . 'href="/contao/main.php?'
+                                    . 'do=' . str_replace('tl_', '', $pTable)
+                                    . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
                                     . '</a>';
                             } else {
-                                $linkString .= ' 
+                                $linkString .= '
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
@@ -218,6 +230,7 @@ class SearchConsole extends \BackendModule
                'id' => $data['id'],
                'pid' => $data['pid'],
                'module' => $module,
+               'tableName' => $table
            );
            if($data['pid'] > 0 && $GLOBALS['TL_DCA'][$table]['fields']['pid']) {
                $r = $this->getParentElements($data['pid'], $table, $module);
