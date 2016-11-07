@@ -104,8 +104,8 @@ class SearchConsole extends \BackendModule
                             if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5) { //treeview
                                 $parents = $this->getParentElements($v['pid'], $v['tableName'], $v['module']);
                             } else if($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] || $v['ptable']) {
-                                $table = ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'];
-                                $parents = $this->getParentElements($v['pid'], $table, str_replace('tl_', '',$table));
+                                $pTable = ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'];
+                                $parents = $this->getParentElements($v['pid'], $pTable, str_replace('tl_', '',$pTable));
 
                             }
 
@@ -138,7 +138,29 @@ class SearchConsole extends \BackendModule
                                     $linkString .= ' < ';
                                 }
                             }
-                            $linkString .= ' <a href="/contao/main.php?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']) . '</a>';
+
+                            if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 4) { //display child record
+                                $linkString .= ' 
+                                <a '
+                                    . 'href="/contao/main.php?'
+                                    . 'do=' . str_replace('tl_', '', $pTable)
+                                    . '&table=tl_'.$links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
+                                    . '&ref=' . TL_REFERER_ID
+                                    . '&rt=' . \RequestToken::get() . '">'
+                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . '</a>';
+                            } else {
+                                $linkString .= ' 
+                                <a '
+                                    . 'href="/contao/main.php?'
+                                    . 'do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
+                                    . '&ref=' . TL_REFERER_ID
+                                    . '&rt=' . \RequestToken::get() . '">'
+                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . '</a>';
+                            }
+
+
                             $counter++;
                         }
 
