@@ -1,0 +1,32 @@
+<h1 class="main_headline">Search Console</h1>
+
+<?php if($this->results) {
+?>
+
+    <div class="tl_listing_container">
+
+        Results: <?php echo $this->resultCount; ?><br />
+
+        <?php #echo $this->query.'<br /><br />'; ?>
+
+        <?php foreach($this->results as $result) {
+
+            ?>
+
+            <ul class="tl_listing tl_tree">
+                <li>
+                    <div class tl_left>
+                        <?php if($result['links']) { echo $result['label'].' - '.$result['links'];} ?>
+                    </div>
+                    <div class="tl_right">
+                    </div>
+                    <div style="clear: both"></div>
+                </li>
+            </ul>
+
+            <?php
+        } ?>
+    </div>
+
+<?php
+} ?>
