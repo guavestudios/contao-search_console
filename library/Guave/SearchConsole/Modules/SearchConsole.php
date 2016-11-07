@@ -96,24 +96,21 @@ class SearchConsole extends \BackendModule
                         \Controller::loadDataContainer($v['tableName']);
                         $links = array();
 
+                        if($GLOBALS['TL_DCA'][$v['tableName']]['fields']['pid'] && $v['pid']) {
 
-                        if($GLOBALS['TL_DCA'][$v['tableName']]['fields']['pid']
-                            &&
-                            (
-                                $GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5 //treeview
-                                || $GLOBALS['TL_DCA'][$v['tableName']]['list']['operations']['cut'] //or subtable
-                            )
-                        ) {
-                            if($v['pid']) {
+                            $parents = array();
+
+                            if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5) { //treeview
                                 $parents = $this->getParentElements($v['pid'], $v['tableName'], $v['module']);
-                                if(!empty($parents)) {
+                            } else if($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] || $v['ptable']) {
+                                $parents = $this->getParentElements($v['pid'], ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'], $v['module']);
 
-                                    rsort($parents);
-                                    foreach($parents as $parent) {
-                                        $links[] = '<a href="/contao/main.php?do='.$v['module'].'&act=edit&id='.$parent['id'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get().'">'.$parent['name'].'</a>';
-                                    }
+                            }
 
-
+                            if(!empty($parents)) {
+                                rsort($parents);
+                                foreach ($parents as $parent) {
+                                    $links[] = '<a href="/contao/main.php?do=' . $parent['module'] . '&act=edit&id=' . $parent['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . $parent['name'] . '</a>';
                                 }
                             }
                         }
@@ -146,6 +143,8 @@ class SearchConsole extends \BackendModule
         if(!$table) {
             return;
         }
+
+//        echo $pid.'-'.$table.'<br />';
 
         $return = array();
 
@@ -221,7 +220,13 @@ class SearchConsole extends \BackendModule
                 $pid = ',"" AS pid';
             }
 
-            $subQuery = 'SELECT '.$m.'.id'.$pid.', '.$m.'.'.$nameField.' AS name, "'.$m.'" AS module, "'.$data['label'].'" AS label, "'.$table.'" AS tableName FROM '.$table.' AS '.$m;
+            if($GLOBALS['TL_DCA'][$table]['fields']['ptable']) {
+                $ptable = ','.$m.'.ptable';
+            } else {
+                $ptable = ',"" AS ptable';
+            }
+
+            $subQuery = 'SELECT '.$m.'.id'.$pid.$ptable.', '.$m.'.'.$nameField.' AS name, "'.$m.'" AS module, "'.$data['label'].'" AS label, "'.$table.'" AS tableName FROM '.$table.' AS '.$m;
 
             if($moduleArray) {
 
