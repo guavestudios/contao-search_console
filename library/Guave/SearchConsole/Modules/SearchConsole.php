@@ -147,7 +147,7 @@ class SearchConsole extends \BackendModule
 
                             \Controller::loadDataContainer($links[$i]['tableName']);
                             if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
-                                $linkString .= '
+                                $linkString .= '1
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . str_replace('tl_', '', $pTable)
@@ -157,17 +157,17 @@ class SearchConsole extends \BackendModule
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
                                     . '</a>';
                             } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
-                                $linkString .= '
+                                $linkString .= '2
                                 <a '
                                     . 'href="/contao/main.php?'
-                                    . 'do=' . str_replace('tl_', '', $pTable)
+                                    . 'do=' . $links[$i]['module']
                                     . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
                                     . '</a>';
                             } else {
-                                $linkString .= '
+                                $linkString .= '3
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
