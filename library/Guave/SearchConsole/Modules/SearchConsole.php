@@ -19,6 +19,7 @@ class SearchConsole extends \BackendModule
         if(!$search) {
             $search = \Session::getInstance()->get('lastSearchConsoleSearch');
         }
+        \Session::getInstance()->set('lastSearchConsoleSearch', $search);
 
         $result = $this->doSearch($search);
 
@@ -72,7 +73,7 @@ class SearchConsole extends \BackendModule
         }
 
 
-        if(strlen($search) >= 2 && empty($shortCuts)) {
+        if(strlen($search) >= 1 && empty($shortCuts)) {
 
             //get last fragment
             $newSearch = $fragements[count($fragements)-1];
@@ -125,8 +126,6 @@ class SearchConsole extends \BackendModule
                         $counter = 0;
                         $linksCount = count($links);
 
-//                        var_dump($links);
-
                         for($i = 0; $i < $linksCount; $i++) {
                             if($activeModule != $links[$i]['module']) {
                                 if($activeModule != null) {
@@ -139,7 +138,7 @@ class SearchConsole extends \BackendModule
                                     $linkString .= ' < ';
                                 }
                             }
-                            $linkString .= ' <a href="/contao/main.php?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . $links[$i]['name'] . '</a>';
+                            $linkString .= ' <a href="/contao/main.php?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']) . '</a>';
                             $counter++;
                         }
 
@@ -187,14 +186,13 @@ class SearchConsole extends \BackendModule
            }
 
            $return[] = array(
-               'label' => $GLOBALS['TL_LANG']['MOD'][$module][0],
+               'label' => ($GLOBALS['TL_LANG']['MOD'][$module][0]) ? $GLOBALS['TL_LANG']['MOD'][$module][0] : $module,
                'name' => $data[$nameField],
                'id' => $data['id'],
                'pid' => $data['pid'],
-               'module' => $module
+               'module' => $module,
            );
-
-           if($data['pid'] > 0) {
+           if($data['pid'] > 0 && $GLOBALS['TL_DCA'][$table]['fields']['pid']) {
                $r = $this->getParentElements($data['pid'], $table, $module);
                if(!empty($r)) {
                    $return[] = $r[0];
@@ -485,6 +483,9 @@ class SearchConsole extends \BackendModule
             }
 
             $table = 'tl_'.$GLOBALS['search_console']['modules'][$m]['module'];
+            if($GLOBALS['search_console']['modules']['table']) {
+                $table = $GLOBALS['search_console']['modules']['table'];
+            }
             \Controller::loadDataContainer($table);
             if($GLOBALS['TL_DCA'][$table]) {
                 if($GLOBALS['TL_DCA'][$table]['fields']) {

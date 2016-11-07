@@ -7,7 +7,7 @@
 
         Results: <?php echo $this->resultCount; ?><br />
 
-        <?php #echo $this->query.'<br /><br />'; ?>
+        <div style="display:none;"><?php echo $this->query; ?></div>
 
         <?php foreach($this->results as $result) {
 

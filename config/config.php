@@ -78,3 +78,12 @@ $GLOBALS['search_console']['modules']['maintenance'] = array(
     'module' => 'maintenance',
     'doNotSearch' => true
 );
+
+$GLOBALS['search_console']['modules']['content'] = array(
+    'shortcut' => 'c',
+    'enableNew' => false,
+    'enableGoTo' => false,
+    'module' => 'content',
+    'defaultSearchFields' => array('id'),
+    'table' => 'tl_content'
+);
