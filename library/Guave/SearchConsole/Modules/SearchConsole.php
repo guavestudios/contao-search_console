@@ -103,22 +103,48 @@ class SearchConsole extends \BackendModule
                             if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5) { //treeview
                                 $parents = $this->getParentElements($v['pid'], $v['tableName'], $v['module']);
                             } else if($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] || $v['ptable']) {
-                                $parents = $this->getParentElements($v['pid'], ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'], $v['module']);
+                                $table = ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'];
+                                $parents = $this->getParentElements($v['pid'], $table, str_replace('tl_', '',$table));
 
                             }
 
                             if(!empty($parents)) {
-                                rsort($parents);
+                                krsort($parents);
                                 foreach ($parents as $parent) {
-                                    $links[] = '<a href="/contao/main.php?do=' . $parent['module'] . '&act=edit&id=' . $parent['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . $parent['name'] . '</a>';
+                                    $links[] = $parent;
                                 }
                             }
                         }
 
 
                         #original link
-                        $links[] = '<a href="/contao/main.php?do='.$v['module'].'&act=edit&id='.$v['id'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get().'">'.$v['name'].'</a>';
-                        $v['links'] = implode(' > ', $links);
+                        $links[] = $v;
+
+                        $linkString = '';
+                        $activeModule = null;
+                        $counter = 0;
+                        $linksCount = count($links);
+
+//                        var_dump($links);
+
+                        for($i = 0; $i < $linksCount; $i++) {
+                            if($activeModule != $links[$i]['module']) {
+                                if($activeModule != null) {
+                                    $linkString .= ' | ';
+                                }
+                                $linkString.= $links[$i]['label'].':';
+                                $activeModule = $links[$i]['module'];
+                            } else {
+                                if($counter <= $linksCount) {
+                                    $linkString .= ' < ';
+                                }
+                            }
+                            $linkString .= ' <a href="/contao/main.php?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id'] . '&ref=' . TL_REFERER_ID . '&rt=' . \RequestToken::get() . '">' . $links[$i]['name'] . '</a>';
+                            $counter++;
+                        }
+
+
+                        $v['links'] = $linkString;
                     }
 
                     $template->results = $data;
@@ -164,7 +190,8 @@ class SearchConsole extends \BackendModule
                'label' => $GLOBALS['TL_LANG']['MOD'][$module][0],
                'name' => $data[$nameField],
                'id' => $data['id'],
-               'pid' => $data['pid']
+               'pid' => $data['pid'],
+               'module' => $module
            );
 
            if($data['pid'] > 0) {

@@ -16,7 +16,7 @@
             <ul class="tl_listing tl_tree">
                 <li>
                     <div class tl_left>
-                        <?php if($result['links']) { echo $result['label'].' - '.$result['links'];} ?>
+                        <?php if($result['links']) { echo $result['links'];} ?>
                     </div>
                     <div class="tl_right">
                     </div>
