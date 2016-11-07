@@ -147,7 +147,7 @@ class SearchConsole extends \BackendModule
 
                             \Controller::loadDataContainer($links[$i]['tableName']);
                             if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
-                                $linkString .= '1
+                                $linkString .= '
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . str_replace('tl_', '', $pTable)
@@ -157,7 +157,7 @@ class SearchConsole extends \BackendModule
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
                                     . '</a>';
                             } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
-                                $linkString .= '2
+                                $linkString .= '
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . $links[$i]['module']
@@ -167,7 +167,7 @@ class SearchConsole extends \BackendModule
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
                                     . '</a>';
                             } else {
-                                $linkString .= '3
+                                $linkString .= '
                                 <a '
                                     . 'href="/contao/main.php?'
                                     . 'do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
