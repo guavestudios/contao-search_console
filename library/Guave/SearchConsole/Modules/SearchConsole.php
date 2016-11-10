@@ -42,7 +42,7 @@ class SearchConsole extends \BackendModule
 
         if($result['resultCount'] == 1) {
             $result = $result['results'][0];
-            header('Location:'. '/contao/main.php?do='.$result['module'].'&act=edit&id='.$result['id'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get());
+            header('Location:'.$this->getBaseUrl().'?do='.$result['module'].'&act=edit&id='.$result['id'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get());
             exit;
         }
 
@@ -149,8 +149,8 @@ class SearchConsole extends \BackendModule
                             if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
                                 $linkString .= '
                                 <a '
-                                    . 'href="/contao/main.php?'
-                                    . 'do=' . str_replace('tl_', '', $pTable)
+                                    . 'href="'.$this->getBaseUrl()
+                                    . '?do=' . str_replace('tl_', '', $pTable)
                                     . '&table=tl_' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
@@ -159,8 +159,8 @@ class SearchConsole extends \BackendModule
                             } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
                                 $linkString .= '
                                 <a '
-                                    . 'href="/contao/main.php?'
-                                    . 'do=' . $links[$i]['module']
+                                    . 'href="'.$this->getBaseUrl()
+                                    . '?do=' . $links[$i]['module']
                                     . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
@@ -169,8 +169,8 @@ class SearchConsole extends \BackendModule
                             } else {
                                 $linkString .= '
                                 <a '
-                                    . 'href="/contao/main.php?'
-                                    . 'do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
+                                    . 'href="'.$this->getBaseUrl()
+                                    . '?do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
                                     . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
@@ -461,7 +461,7 @@ class SearchConsole extends \BackendModule
                     'id' => 'g '.$data['shortcut'],
                     'category' => 'cmd',
                     'action' => 'redirect',
-                    'url' => '/contao/main.php?do='.$data['module'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get()
+                    'url' => $this->getBaseUrl().'?do='.$data['module'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get()
                 );
             }
 
@@ -473,7 +473,7 @@ class SearchConsole extends \BackendModule
                     'id' => 'n '.$data['shortcut'],
                     'category' => 'cmd',
                     'action' => 'redirect',
-                    'url' => '/contao/main.php?do='.$data['module'].'&act=paste&mode=create&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get()
+                    'url' => $this->getBaseUrl().'?do='.$data['module'].'&act=paste&mode=create&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get()
                 );
             }
 
@@ -555,6 +555,13 @@ class SearchConsole extends \BackendModule
         }
 
         return $return;
+    }
+
+    public function getBaseUrl()
+    {
+        $url = substr(\Idna::decode(\Environment::get('base')), 0, -1).\Environment::get('requestUri');
+        $explode = explode('?', $url);
+        return $explode[0];
     }
 
 

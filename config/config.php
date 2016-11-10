@@ -2,7 +2,7 @@
 
 if(TL_MODE == 'BE') {
     $GLOBALS['TL_HOOKS']['outputBackendTemplate'][] = array('\Guave\SearchConsole\Helper\Helper','injectJavascript');
-    $GLOBALS['TL_HOOKS']['executePreActions'][] = array('Guave\SearchConsole\Modules\SearchConsole','search');
+    $GLOBALS['TL_HOOKS']['executePreActions'][] = array('\Guave\SearchConsole\Modules\SearchConsole','search');
     $GLOBALS['TL_HOOKS']['getUserNavigation'][] = array('\Guave\SearchConsole\Helper\Helper','disableModule');
 }
 

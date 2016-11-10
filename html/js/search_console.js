@@ -4,7 +4,7 @@
     $(function(){
         console.info('load search-console');
         $('#container').prepend($('<div id="search_box_container">' +
-            '<form action="/contao/main.php?do=search_console&ref='+Contao.referer_id+'" method="post">' +
+            '<form action="'+window.location.pathname+'?do=search_console&ref='+Contao.referer_id+'" method="post">' +
             '<input type="text" id="search_console" name="search_console" value="" />' +
             '<input type="hidden" name="REQUEST_TOKEN" id="search_console_request_token" value="'+Contao.request_token+'" />' +
             '</form>' +
@@ -42,7 +42,7 @@
             source: function (request, response) {
                 request.REQUEST_TOKEN = $('#search_console_request_token').val();
                 request.action = 'search_console';
-                $.post("/contao/main.php?do=search_console", request, function( data, status, xhr ) {
+                $.post(window.location.pathname+"?do=search_console", request, function( data, status, xhr ) {
 
                     console.info(data);
                     if(parseInt(data.resultCount) > 0) {
