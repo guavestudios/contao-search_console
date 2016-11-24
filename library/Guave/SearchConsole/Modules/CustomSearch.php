@@ -5,6 +5,54 @@ namespace Guave\SearchConsole\Modules;
 
 class CustomSearch extends SearchConsole {
 
+    public function customSearchModule($search)
+    {
+
+        $fragments = explode(' ', $search);
+        foreach($fragments as $fragment) {
+
+            $moduleQuery = '
+                            SELECT
+                                module.id,
+                                module.pid,
+                                module.name,
+                                "tl_themes" AS ptable,
+                                "themes" AS module,
+                                "'.$this->getLabelOfModule('module').'" AS label,
+                                "tl_module" AS tableName
+                            FROM
+                                tl_module AS module
+                            ';
+            $fields = $this->getFieldsFromDca('tl_module', $fragment);
+
+            $buildSelectFields = array();
+            if($fields) {
+                //do like search on fragment
+                foreach($fields as $f) {
+                    $field = $f['id'];
+                    if($field == $fragment) {
+                        if(isset($GLOBALS['TL_DCA']['tl_article']['fields'][$field])) {
+                            $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                        }
+                    }
+                }
+            }
+
+            if(empty($buildSelectFields)) {
+                $buildSelectFields[] = 'module.id like '.$this->getSqlEscape($fragment, true);
+                $buildSelectFields[] = 'module.name like '.$this->getSqlEscape($fragment, true);
+            }
+
+            $moduleQuery .= ' WHERE ';
+            $moduleQuery .= implode(' OR ', $buildSelectFields);
+            $moduleQuery .= ' LIMIT 20';
+
+            return $moduleQuery;
+
+        }
+
+    }
+    
     public function customSearchPageArticle($search)
     {
 
@@ -78,6 +126,7 @@ class CustomSearch extends SearchConsole {
                         ) AS groupedData   
                     GROUP BY
                         groupedData.id
+                    LIMIT 20
                     ';
 
 //            echo $articleQuery.'<br /><hr>';

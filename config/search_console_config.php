@@ -61,7 +61,7 @@ $GLOBALS['search_console']['modules']['form'] = array(
 );
 
 $GLOBALS['search_console']['modules']['maintenance'] = array(
-    'shortcut' => 'm',
+    'shortcut' => 'maintenance',
     'enableNew' => false,
     'enableGoTo' => true,
     'module' => 'maintenance',
@@ -82,4 +82,11 @@ $GLOBALS['search_console']['modules']['pa'] = array(
     'enableNew' => false,
     'enableGoTo' => false,
     'customSearch' => array('\Guave\SearchConsole\Modules\CustomSearch', 'customSearchPageArticle')
+);
+
+$GLOBALS['search_console']['modules']['module'] = array(
+    'shortcut' => 'm',
+    'enableNew' => false,
+    'enableGoTo' => false,
+    'customSearch' => array('\Guave\SearchConsole\Modules\CustomSearch', 'customSearchModule')
 );

@@ -44,8 +44,9 @@ class SearchConsole extends \BackendModule
 
 
         if($result['resultCount'] == 1) {
+
             $result = $result['results'][0];
-            header('Location:'.$this->getBaseUrl().'?do='.$result['module'].'&act=edit&id='.$result['id'].'&ref='.TL_REFERER_ID.'&rt='.\RequestToken::get());
+            header('Location:'.$result['link']);
             exit;
         }
 
@@ -125,6 +126,9 @@ class SearchConsole extends \BackendModule
 
 
                         #original link
+                        if($v['module'] == 'theme') {
+                            $v['module'] = 'themes';
+                        }
                         $links[] = $v;
 
                         $linkString = '';
@@ -153,41 +157,40 @@ class SearchConsole extends \BackendModule
 
                             \Controller::loadDataContainer($links[$i]['tableName']);
 
+
                             $name = (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']);
                             foreach ($fragements as $fragement) {
-                                $name = str_replace($fragement, '<mark>'.$fragement.'</mark>', $name);
+
+                                $name =  preg_replace('#'. preg_quote($fragement) .'#i', '<mark>\\0</mark>', $name);
+
                             }
 
                             if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
-                                $linkString .= '
-                                <a '
-                                    . 'href="'.$this->getBaseUrl()
-                                    . '?do=' . str_replace('tl_', '', $pTable)
-                                    . '&table=tl_' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
+
+                                $do = str_replace('tl_', '', $pTable);
+                                if($do == 'theme') {
+                                    $do = 'themes';
+                                };
+
+                                $link = $this->getBaseUrl()
+                                    . '?do=' . str_replace('tl_', '', $do)
+                                    . '&table=' . $links[$i]['tableName'] . '&act=edit&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get() . '">'
-                                    . $name
-                                    . '</a>';
+                                    . '&rt=' . \RequestToken::get();
                             } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
-                                $linkString .= '
-                                <a '
-                                    . 'href="'.$this->getBaseUrl()
+                                $link = $this->getBaseUrl()
                                     . '?do=' . $links[$i]['module']
                                     . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get() . '">'
-                                    . $name
-                                    . '</a>';
+                                    . '&rt=' . \RequestToken::get();
                             } else {
-                                $linkString .= '
-                                <a '
-                                    . 'href="'.$this->getBaseUrl()
-                                    . '?do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
+                                $link = $this->getBaseUrl()
+                                    . '?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get() . '">'
-                                    . $name
-                                    . '</a>';
+                                    . '&rt=' . \RequestToken::get();
                             }
+
+                            $linkString .= '<a href="' . $link . '">'. $name. '</a>';
 
 
                             $counter++;
@@ -195,6 +198,9 @@ class SearchConsole extends \BackendModule
 
 
                         $v['links'] = $linkString;
+                        if(!empty($links)) {
+                            $v['link'] = $link;
+                        }
                     }
 
                     $template->results = $data;
@@ -221,6 +227,11 @@ class SearchConsole extends \BackendModule
         }
 
 
+        if($module == 'theme') {
+            $module = 'themes';
+        }
+
+
 //        echo $pid.'-'.$table.'<br />';
 
         $return = array();
@@ -238,7 +249,7 @@ class SearchConsole extends \BackendModule
            }
 
            $return[] = array(
-               'label' => ($GLOBALS['TL_LANG']['MOD'][$module][0]) ? $GLOBALS['TL_LANG']['MOD'][$module][0] : $module,
+               'label' => $this->getLabelOfModule($module),
                'name' => $data[$nameField],
                'id' => $data['id'],
                'pid' => $data['pid'],
@@ -395,7 +406,7 @@ class SearchConsole extends \BackendModule
         if($queries) {
             $query = 'SELECT allData.* FROM (';
             $query .= implode(' UNION ', $queries);
-            $query .= ') AS allData';
+            $query .= ') AS allData LIMIT 20';
         } else {
             return null;
         }
@@ -471,7 +482,7 @@ class SearchConsole extends \BackendModule
 
                     if($user->isAdmin || $user->hasAccess($data['module'], 'modules')) {
 
-                        $label = $this->getLabelOfModule($data);
+                        $label = $this->getLabelOfModule(($data['table']) ? $data['table'] : $data['moudle']);
 
                         $data['label'] = $label;
                         $modules[$module] = $data;
@@ -694,16 +705,21 @@ class SearchConsole extends \BackendModule
      * @param $data
      * @return mixed
      */
-    protected function getLabelOfModule($data)
+    protected function getLabelOfModule($module )
     {
-        if ($data['module'] == 'content') {
+
+        if(strstr($module, 'tl_')) {
+            $module = 'tl_'.$module;
+        }
+
+        if ($module == 'tl_content') {
             $label = $GLOBALS['TL_LANG']['CTE']['alias'][0];
             return $label;
-        } else if ($GLOBALS['TL_LANG']['CTE'][$data['module']][0]) {
-            $label = $GLOBALS['TL_LANG']['CTE'][$data['module']][0];
+        } else if ($GLOBALS['TL_LANG']['CTE'][$module][0]) {
+            $label = $GLOBALS['TL_LANG']['CTE'][$module][0];
             return $label;
         } else {
-            $label = $GLOBALS['TL_LANG']['MOD'][$data['module']][0];
+            $label = $GLOBALS['TL_LANG']['MOD'][$module][0];
             return $label;
         }
     }
