@@ -69,7 +69,7 @@ class CustomSearch extends SearchConsole {
                         groupedData.title AS name,
                         "" AS ptable,
                         "article" AS module,
-                        "asdf" AS label,
+                        "'.$this->getLabelOfModule('article').'" AS label,
                         "tl_article" AS tableName
                     FROM
                         (

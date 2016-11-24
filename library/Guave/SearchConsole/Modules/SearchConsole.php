@@ -470,7 +470,10 @@ class SearchConsole extends \BackendModule
                 foreach ($GLOBALS['search_console']['modules'] as $module => $data) {
 
                     if($user->isAdmin || $user->hasAccess($data['module'], 'modules')) {
-                        $data['label'] = $GLOBALS['TL_LANG']['MOD'][$data['module']][0];
+
+                        $label = $this->getLabelOfModule($data);
+
+                        $data['label'] = $label;
                         $modules[$module] = $data;
                     }
                 }
@@ -685,6 +688,24 @@ class SearchConsole extends \BackendModule
         $buffer = str_replace('<head>', '<head>'.$script, $buffer);
         return $buffer;
 
+    }
+
+    /**
+     * @param $data
+     * @return mixed
+     */
+    protected function getLabelOfModule($data)
+    {
+        if ($data['module'] == 'content') {
+            $label = $GLOBALS['TL_LANG']['CTE']['alias'][0];
+            return $label;
+        } else if ($GLOBALS['TL_LANG']['CTE'][$data['module']][0]) {
+            $label = $GLOBALS['TL_LANG']['CTE'][$data['module']][0];
+            return $label;
+        } else {
+            $label = $GLOBALS['TL_LANG']['MOD'][$data['module']][0];
+            return $label;
+        }
     }
 
 
