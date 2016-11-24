@@ -8,3 +8,7 @@
 .ui-autocomplete {
     z-index: 100;
 }
+
+#search_box_container {
+    width: 100%;
+}

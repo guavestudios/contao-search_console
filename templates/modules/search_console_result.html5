@@ -1,20 +1,21 @@
 <h1 class="main_headline">Search Console</h1>
 
+Results for search "<?php echo $this->search; ?>": <?php echo $this->resultCount; ?><br />
+<div style="display:block;"><textarea style="width: 95%;" rows="5" cols="100"><?php echo $this->query; ?></textarea><br /><br /></div>
 <?php if($this->results) {
-?>
+    ?>
 
     <div class="tl_listing_container">
 
-        Results: <?php echo $this->resultCount; ?><br />
 
-        <div style="display:none;"><?php echo $this->query; ?></div>
+
 
         <?php foreach($this->results as $result) {
 
             ?>
 
             <ul class="tl_listing tl_tree">
-                <li>
+                <li onmouseover="Theme.hoverDiv(this,1)" onmouseout="Theme.hoverDiv(this,0)">
                     <div class tl_left>
                         <?php if($result['links']) { echo $result['links'];} ?>
                     </div>

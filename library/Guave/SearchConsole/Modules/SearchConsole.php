@@ -9,6 +9,9 @@ class SearchConsole extends \BackendModule
 
     protected $modules = array();
 
+    /**
+     * @return string
+     */
     public function generate() {
 
         $search = \Input::postRaw('search_console');
@@ -72,6 +75,10 @@ class SearchConsole extends \BackendModule
             $return['items'] = array_merge($return['items'], $shortCuts);
         }
 
+        $template = new \FrontendTemplate('search_console_result');
+        $template->search = $search;
+        $return['resultCount'] = 0;
+        $return['results'] = array();
 
         if(strlen($search) >= 1 && empty($shortCuts)) {
 
@@ -90,7 +97,6 @@ class SearchConsole extends \BackendModule
                 $data = \Database::getInstance()->query($query)->fetchAllAssoc();
                 $return['resultCount'] = count($data);
                 if($data) {
-                    $template = new \FrontendTemplate('search_console_result');
 
                     foreach($data as &$v) {
 
@@ -136,7 +142,7 @@ class SearchConsole extends \BackendModule
                                     $links[$i]['label'] = $links[$i]['module'];
                                 }
 
-                                $linkString.= $links[$i]['label'].':';
+                                $linkString.= '<strong>'.$links[$i]['label'].'</strong>:';
                                 $activeModule = $links[$i]['module'];
                             } else {
                                 if($counter <= $linksCount) {
@@ -146,6 +152,12 @@ class SearchConsole extends \BackendModule
 
 
                             \Controller::loadDataContainer($links[$i]['tableName']);
+
+                            $name = (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']);
+                            foreach ($fragements as $fragement) {
+                                $name = str_replace($fragement, '<mark>'.$fragement.'</mark>', $name);
+                            }
+
                             if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
                                 $linkString .= '
                                 <a '
@@ -154,7 +166,7 @@ class SearchConsole extends \BackendModule
                                     . '&table=tl_' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
-                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . $name
                                     . '</a>';
                             } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
                                 $linkString .= '
@@ -164,7 +176,7 @@ class SearchConsole extends \BackendModule
                                     . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
-                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . $name
                                     . '</a>';
                             } else {
                                 $linkString .= '
@@ -173,7 +185,7 @@ class SearchConsole extends \BackendModule
                                     . '?do=' . $links[$i]['module'] . '&act=edit&id='.$links[$i]['id']
                                     . '&ref=' . TL_REFERER_ID
                                     . '&rt=' . \RequestToken::get() . '">'
-                                    . (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id'])
+                                    . $name
                                     . '</a>';
                             }
 
@@ -186,16 +198,16 @@ class SearchConsole extends \BackendModule
                     }
 
                     $template->results = $data;
-                    $template->query = $query;
-                    $template->resultCount = $return['resultCount'];
-                    $result = $template->parse();
                     $return['results'] = $data;
-                    $return['resultHtml'] = $result;
                 }
             }
-
-
         }
+
+        $template->query = $query;
+        $template->resultCount = $return['resultCount'];
+        $result = $template->parse();
+        $return['resultHtml'] = $result;
+
 
         return $return;
 
@@ -207,6 +219,7 @@ class SearchConsole extends \BackendModule
         if(!$table) {
             return;
         }
+
 
 //        echo $pid.'-'.$table.'<br />';
 
@@ -233,7 +246,17 @@ class SearchConsole extends \BackendModule
                'tableName' => $table
            );
            if($data['pid'] > 0 && $GLOBALS['TL_DCA'][$table]['fields']['pid']) {
-               $r = $this->getParentElements($data['pid'], $table, $module);
+
+
+               if($GLOBALS['TL_DCA'][$table]['list']['sorting']['mode'] == 5) { //treeview
+                   $pTable = $table;
+               } else if($GLOBALS['TL_DCA'][$table]['config']['ptable'] || $table) {
+                   $pTable = ($GLOBALS['TL_DCA'][$table]['config']['ptable']) ? $GLOBALS['TL_DCA'][$table]['config']['ptable'] : $table;
+                   $module = str_replace('tl_', '',$pTable);
+               }
+
+
+               $r = $this->getParentElements($data['pid'], $pTable, $module);
                if(!empty($r)) {
                    $return[] = $r[0];
                }
@@ -269,83 +292,105 @@ class SearchConsole extends \BackendModule
                 $table = $moduleArray['table'];
             }
 
-            $nameFields = $this->getFields('', $m);
-            $nameField = 'id';
-            $allowedNameFields = array('name', 'title', 'alias');
-            foreach ($nameFields as $field) {
-                if(in_array($field['id'], $allowedNameFields) && isset($GLOBALS['TL_DCA'][$table]['fields'][$field['id']])) {
-                    $nameField = $field['id'];
-                    break;
-                }
-            }
 
-            if($GLOBALS['TL_DCA'][$table]['fields']['pid']) {
-                $pid = ','.$m.'.pid';
-            } else {
-                $pid = ',"" AS pid';
-            }
-
-            if($GLOBALS['TL_DCA'][$table]['fields']['ptable']) {
-                $ptable = ','.$m.'.ptable';
-            } else {
-                $ptable = ',"" AS ptable';
-            }
-
-            $subQuery = 'SELECT '.$m.'.id'.$pid.$ptable.', '.$m.'.'.$nameField.' AS name, "'.$m.'" AS module, "'.$data['label'].'" AS label, "'.$table.'" AS tableName FROM '.$table.' AS '.$m;
-
-            if($moduleArray) {
-
-                $buildSelectFields = array();
-
+            //remove shortcut from search
+            $fragments = explode(' ', $search);
+            if($fragments[0] && $moduleArray['shortcut'] == $fragments[0]) {
+                $search = substr($search, strlen($fragments[0])+1);
                 $fragments = explode(' ', $search);
-                foreach($fragments as $fragment) {
-                    $fields = $this->getFields($fragment, $m);
+            }
 
-                    $re = '/(.*)(=|>|<|!=)(.*)/';
-                    preg_match($re, html_entity_decode($fragment), $matches);
 
-                    //do operator search
-                    if($matches) {
-                        $check = $this->getFields($matches[1], $m);
-                        if($check) {
-                            if(isset($GLOBALS['TL_DCA'][$table]['fields'][$matches[1]])) {
-                                $buildSelectFields[] = $matches[1] . $matches[2] . $this->getSqlEscape($matches[3]);
-                            }
-                        }
-                        continue;
+            if (isset($moduleArray['customSearch']) && is_array($moduleArray['customSearch'])) { //do custom query?
+                $subQuery = \System::importStatic($moduleArray['customSearch'][0])->{$moduleArray['customSearch'][1]}($search);
+                echo $subQuery;
+                if($subQuery) {
+                    $queries[] = '('.$subQuery.')';
+                }
+            } else {
+
+
+                $nameFields = $this->getFields('', $m);
+                $nameField = 'id';
+                $allowedNameFields = array('name', 'title', 'alias');
+                foreach ($nameFields as $field) {
+                    if(in_array($field['id'], $allowedNameFields) && isset($GLOBALS['TL_DCA'][$table]['fields'][$field['id']])) {
+                        $nameField = $field['id'];
+                        break;
                     }
+                }
 
-                    //do like search on fragment
-                    foreach($fields as $field) {
-                        if($field == $fragment) {
-                            if(!in_array($field, $buildSelectFields)) {
+                if($GLOBALS['TL_DCA'][$table]['fields']['pid']) {
+                    $pid = ','.$m.'.pid';
+                } else {
+                    $pid = ',"" AS pid';
+                }
+
+                if($GLOBALS['TL_DCA'][$table]['fields']['ptable']) {
+                    $ptable = ','.$m.'.ptable';
+                } else {
+                    $ptable = ',"" AS ptable';
+                }
+
+                $subQuery = 'SELECT '.$m.'.id'.$pid.$ptable.', '.$m.'.'.$nameField.' AS name, "'.$m.'" AS module, "'.$data['label'].'" AS label, "'.$table.'" AS tableName FROM '.$table.' AS '.$m;
+
+                if($moduleArray) {
+
+                    $buildSelectFields = array();
+
+
+                    foreach($fragments as $fragment) {
+                        $fields = $this->getFields($fragment, $m);
+
+                        $re = '/(.*)(=|>|<|!=)(.*)/';
+                        preg_match($re, html_entity_decode($fragment), $matches);
+
+                        //do operator search
+                        if($matches && $matches[3]) {
+                            $check = $this->getFields($matches[1], $m);
+                            if($check) {
+                                if(isset($GLOBALS['TL_DCA'][$table]['fields'][$matches[1]])) {
+                                    if($matches[2] == '=') {
+                                        $buildSelectFields[] = $matches[1] . ' like ' . $this->getSqlEscape($matches[3], true);
+                                    } else {
+                                        $buildSelectFields[] = $matches[1] . $matches[2] . $this->getSqlEscape($matches[3]);
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+
+                        //do like search on fragment
+                        foreach($fields as $field) {
+                            if($field == $fragment) {
                                 if(isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
                                     $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
                                 }
                             }
                         }
                     }
-                }
 
-                if(empty($buildSelectFields)) {
-                    if ($moduleArray['defaultSearchFields']) {
-                        foreach ($moduleArray['defaultSearchFields'] as $field) {
-                            if (isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
-                                $buildSelectFields[] = $field . ' like ' . $this->getSqlEscape($fragment, true);
+                    if(empty($buildSelectFields)) {
+                        if ($moduleArray['defaultSearchFields']) {
+                            foreach ($moduleArray['defaultSearchFields'] as $field) {
+                                if (isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
+                                    $buildSelectFields[] = $field . ' like ' . $this->getSqlEscape($fragment, true);
+                                }
                             }
                         }
                     }
+
+                    if(!empty($buildSelectFields)) {
+                        $subQuery .= ' WHERE ';
+                        $subQuery .= implode(' OR ', $buildSelectFields);
+                    }
+                    $subQuery .= ' LIMIT 20';
+
+                    $queries[] = '('.$subQuery.')';
+
                 }
-
-                if(!empty($buildSelectFields)) {
-                    $subQuery .= ' WHERE ';
-                    $subQuery .= implode(' OR ', $buildSelectFields);
-                }
-                $subQuery .= ' LIMIT 20';
-
-                $queries[] = '('.$subQuery.')';
-
             }
+
         }
 
         if($queries) {
@@ -506,6 +551,44 @@ class SearchConsole extends \BackendModule
 
     }
 
+    public function getFieldsFromDca($table, $search=null)
+    {
+
+        $return = array();
+
+        \Controller::loadDataContainer($table);
+
+        if($GLOBALS['TL_DCA'][$table]) {
+            if($GLOBALS['TL_DCA'][$table]['fields']) {
+                foreach($GLOBALS['TL_DCA'][$table]['fields'] as $field => $data) {
+
+                    if(!in_array($field, $return)) {
+
+                        $return[] = array(
+                            'label' => $field.' '.$data['label'][0],
+                            'value' => $field.' '.$data['label'][0],
+                            'id' => $field,
+                            'category' => 'fields',
+                        );
+                    }
+                }
+            }
+        }
+
+        //cleanup
+        if($search) {
+            foreach($return as $k => $v) {
+                if(substr($v['value'],0, strlen($search)) != $search) {
+                    unset($return[$k]);
+                }
+            }
+        }
+
+        return $return;
+
+
+    }
+
     public function getFields($search, $module = null) {
 
         global $GLOBALS;
@@ -526,24 +609,19 @@ class SearchConsole extends \BackendModule
             if($GLOBALS['search_console']['modules']['table']) {
                 $table = $GLOBALS['search_console']['modules']['table'];
             }
-            \Controller::loadDataContainer($table);
+
+            $fields = $this->getFieldsFromDca($table, $search);
+
             if($GLOBALS['TL_DCA'][$table]) {
                 if($GLOBALS['TL_DCA'][$table]['fields']) {
-                    foreach($GLOBALS['TL_DCA'][$table]['fields'] as $field => $data) {
-                        if(!in_array($field, $return)) {
-
-                            $return[] = array(
-                                'label' => $field.' '.$data['label'][0],
-                                'value' => $field.' '.$data['label'][0],
-                                'id' => $field,
-                                'category' => 'fields',
-                            );
-                        }
+                    foreach($fields as $data) {
+                        $return[] = $data;
                     }
                 }
             }
 
         }
+
 
         //cleanup
         if($search) {
@@ -562,6 +640,52 @@ class SearchConsole extends \BackendModule
         $url = substr(\Idna::decode(\Environment::get('base')), 0, -1).\Environment::get('requestUri');
         $explode = explode('?', $url);
         return $explode[0];
+    }
+
+    public function injectJavascript($buffer, $template)
+    {
+
+        if(!\BackendUser::getInstance()->authenticate()) {
+            return $buffer;
+        }
+
+        $hasJquery = strstr($buffer, 'jquery.');
+        $hasJqueryUi = strstr($buffer, 'jquery-ui.');
+
+
+        $script = '';
+        if(!$hasJquery) {
+            $script .= '<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>';
+        }
+        if (!$hasJqueryUi) {
+            $script .= '<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>';
+        }
+        $js = array();
+        $js['search_console_main'] = '/system/modules/search_console/html/js/search_console.js';
+
+
+
+        foreach($js as $s) {
+            $options = \StringUtil::resolveFlaggedUrl($s);
+            $script .= \Template::generateScriptTag(\Controller::addStaticUrlTo($s), false, $options->async) . "\n";
+        }
+
+        $script .= '<script>$.noConflict();</script>' . "\n";
+
+        $css = array();
+        if(!$hasJqueryUi) {
+            $css['jquery_ui_css'] = '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css';
+        }
+        $css['search_console_main'] = '/system/modules/search_console/html/css/search_console.css';
+        foreach($css as $c) {
+
+            $options = \StringUtil::resolveFlaggedUrl($c);
+            $script .= \Template::generateStyleTag(\Controller::addStaticUrlTo($c), $options->media) . "\n";
+        }
+
+        $buffer = str_replace('<head>', '<head>'.$script, $buffer);
+        return $buffer;
+
     }
 
 
