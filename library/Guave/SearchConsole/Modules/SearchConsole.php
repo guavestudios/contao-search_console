@@ -303,7 +303,6 @@ class SearchConsole extends \BackendModule
 
             if (isset($moduleArray['customSearch']) && is_array($moduleArray['customSearch'])) { //do custom query?
                 $subQuery = \System::importStatic($moduleArray['customSearch'][0])->{$moduleArray['customSearch'][1]}($search);
-                echo $subQuery;
                 if($subQuery) {
                     $queries[] = '('.$subQuery.')';
                 }

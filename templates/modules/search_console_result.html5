@@ -1,7 +1,7 @@
 <h1 class="main_headline">Search Console</h1>
 
 Results for search "<?php echo $this->search; ?>": <?php echo $this->resultCount; ?><br />
-<div style="display:block;"><textarea style="width: 95%;" rows="5" cols="100"><?php echo $this->query; ?></textarea><br /><br /></div>
+<div style="display:none;"><textarea style="width: 95%;" rows="5" cols="100"><?php echo $this->query; ?></textarea><br /><br /></div>
 <?php if($this->results) {
     ?>
 
