@@ -146,7 +146,7 @@ class SearchConsole extends \BackendModule
                                     $links[$i]['label'] = $links[$i]['module'];
                                 }
 
-                                $linkString.= '<strong>'.$links[$i]['label'].'</strong>:';
+                                $linkString.= '<strong>'.$links[$i]['label'].'</strong>: ';
                                 $activeModule = $links[$i]['module'];
                             } else {
                                 if($counter <= $linksCount) {
@@ -298,7 +298,11 @@ class SearchConsole extends \BackendModule
                 continue;
             }
 
-            $table = 'tl_'.$moduleArray['module'];
+            if(strstr($moduleArray['module'], 'tl_') === false) {
+				$table = 'tl_'.$moduleArray['module'];
+			} else {
+            	$table = $moduleArray['module'];
+			}
             if($moduleArray['table']) {
                 $table = $moduleArray['table'];
             }
@@ -571,6 +575,7 @@ class SearchConsole extends \BackendModule
 
         \Controller::loadDataContainer($table);
 
+
         if($GLOBALS['TL_DCA'][$table]) {
             if($GLOBALS['TL_DCA'][$table]['fields']) {
                 foreach($GLOBALS['TL_DCA'][$table]['fields'] as $field => $data) {
@@ -579,7 +584,7 @@ class SearchConsole extends \BackendModule
 
                         $return[] = array(
                             'label' => $field.' '.$data['label'][0],
-                            'value' => $field.' '.$data['label'][0],
+                            'value' => $field,
                             'id' => $field,
                             'category' => 'fields',
                         );
@@ -618,7 +623,11 @@ class SearchConsole extends \BackendModule
                 }
             }
 
-            $table = 'tl_'.$GLOBALS['search_console']['modules'][$m]['module'];
+            if(strstr($GLOBALS['search_console']['modules'][$m]['module'], 'tl_') === false) {
+            	$table = 'tl_'.$GLOBALS['search_console']['modules'][$m]['module'];
+			} else {
+            	$table = $GLOBALS['search_console']['modules'][$m]['module'];
+			}
             if($GLOBALS['search_console']['modules']['table']) {
                 $table = $GLOBALS['search_console']['modules']['table'];
             }
@@ -658,11 +667,12 @@ class SearchConsole extends \BackendModule
     public function injectJavascript($buffer, $template)
     {
 
-        if(!\BackendUser::getInstance()->authenticate()) {
-            return $buffer;
-        }
 
-        $hasJquery = strstr($buffer, 'jquery.');
+		if(!\BackendUser::getInstance()->authenticate()) {
+			return $buffer;
+		}
+
+		$hasJquery = strstr($buffer, 'jquery.');
         $hasJqueryUi = strstr($buffer, 'jquery-ui.');
 
 
@@ -679,8 +689,7 @@ class SearchConsole extends \BackendModule
 
 
         foreach($js as $s) {
-            $options = \StringUtil::resolveFlaggedUrl($s);
-            $script .= \Template::generateScriptTag(\Controller::addStaticUrlTo($s), false, $options->async) . "\n";
+            $script .= '<script src="' . \Controller::addStaticUrlTo($s) . '"></script>' . "\n";
         }
 
         $script .= '<script>$.noConflict();</script>' . "\n";
@@ -691,9 +700,7 @@ class SearchConsole extends \BackendModule
         }
         $css['search_console_main'] = '/system/modules/search_console/html/css/search_console.css';
         foreach($css as $c) {
-
-            $options = \StringUtil::resolveFlaggedUrl($c);
-            $script .= \Template::generateStyleTag(\Controller::addStaticUrlTo($c), $options->media) . "\n";
+			$script .=  '<link rel="stylesheet" href="' . \Controller::addStaticUrlTo($c) . '">' . "\n";
         }
 
         $buffer = str_replace('<head>', '<head>'.$script, $buffer);
