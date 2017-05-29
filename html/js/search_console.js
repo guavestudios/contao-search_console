@@ -2,7 +2,6 @@
 !function($){
 
     $(function(){
-        console.info('load search-console');
         $('#tl_navigation').find('h1').append($('<div id="search_box_container">' +
             '<form action="'+window.location.pathname+'?do=search_console&ref='+Contao.referer_id+'" method="post">' +
             '<input placeholder="search|cmd" type="text" id="search_console" name="search_console" value="" />' +
@@ -21,7 +20,6 @@
                 this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
             },
             _renderMenu: function( ul, items ) {
-                console.info('render');
                 var that = this,
                     currentCategory = "";
                 $.each( items, function( index, item ) {
@@ -44,7 +42,6 @@
                 request.action = 'search_console';
                 $.post(window.location.pathname+"?do=search_console", request, function( data, status, xhr ) {
 
-                    console.info(data);
                     if(parseInt(data.resultCount) > 0) {
                         $('#main').html(data.resultHtml);
                     } else {
@@ -54,7 +51,7 @@
                     response( data.items );
                 });
             },
-            minLength: 0,
+            minLength: 1,
             noCache: true,
             select: function( event, ui ) {
 
@@ -64,7 +61,6 @@
                     }
                 }
 
-                console.info( "Selected: " + ui.item.value + " aka " + ui.item.id + ui.item.action);
             }
         });
 
