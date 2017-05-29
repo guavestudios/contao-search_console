@@ -307,7 +307,6 @@ class SearchConsole extends \BackendModule
                 $table = $moduleArray['table'];
             }
 
-
             //remove shortcut from search
             $fragments = explode(' ', $search);
             if($fragments[0] && $moduleArray['shortcut'] == $fragments[0]) {
@@ -323,11 +322,12 @@ class SearchConsole extends \BackendModule
                 }
             } else {
 
-
                 $nameFields = $this->getFields('', $m);
+
                 $nameField = 'id';
                 $allowedNameFields = array('name', 'title', 'alias');
                 foreach ($nameFields as $field) {
+
                     if(in_array($field['id'], $allowedNameFields) && isset($GLOBALS['TL_DCA'][$table]['fields'][$field['id']])) {
                         $nameField = $field['id'];
                         break;
@@ -486,12 +486,14 @@ class SearchConsole extends \BackendModule
 
                     if($user->isAdmin || $user->hasAccess($data['module'], 'modules')) {
 
-                        $label = $this->getLabelOfModule(($data['table']) ? $data['table'] : $data['moudle']);
-
-                        $data['label'] = $label;
+                    	if($data['table'] || $data['module']) {
+	                        $label = $this->getLabelOfModule(($data['table']) ? $data['table'] : $data['module']);
+    	                    $data['label'] = $label;
+						}
                         $modules[$module] = $data;
                     }
                 }
+
                 $this->modules = $modules;
             }
 
@@ -628,8 +630,8 @@ class SearchConsole extends \BackendModule
 			} else {
             	$table = $GLOBALS['search_console']['modules'][$m]['module'];
 			}
-            if($GLOBALS['search_console']['modules']['table']) {
-                $table = $GLOBALS['search_console']['modules']['table'];
+            if($GLOBALS['search_console']['modules'][$m]['table']) {
+                $table = $GLOBALS['search_console']['modules'][$m]['table'];
             }
 
             $fields = $this->getFieldsFromDca($table, $search);
@@ -668,9 +670,9 @@ class SearchConsole extends \BackendModule
     {
 
 
-		if(!\BackendUser::getInstance()->authenticate()) {
-			return $buffer;
-		}
+//		if(!\BackendUser::getInstance()->authenticate()) {
+//			return $buffer;
+//		}
 
 		$hasJquery = strstr($buffer, 'jquery.');
         $hasJqueryUi = strstr($buffer, 'jquery-ui.');
@@ -712,23 +714,32 @@ class SearchConsole extends \BackendModule
      * @param $data
      * @return mixed
      */
-    protected function getLabelOfModule($module )
+    protected function getLabelOfModule($module)
     {
 
-        if(strstr($module, 'tl_')) {
-            $module = 'tl_'.$module;
+    	$table = $module;
+        if(strstr($table, 'tl_') === false) {
+			$table = 'tl_'.$table;
         }
 
+		\Controller::loadDataContainer($module);
+
+
+        $label = '';
         if ($module == 'tl_content') {
             $label = $GLOBALS['TL_LANG']['CTE']['alias'][0];
-            return $label;
         } else if ($GLOBALS['TL_LANG']['CTE'][$module][0]) {
-            $label = $GLOBALS['TL_LANG']['CTE'][$module][0];
-            return $label;
-        } else {
-            $label = $GLOBALS['TL_LANG']['MOD'][$module][0];
-            return $label;
-        }
+			$label = $GLOBALS['TL_LANG']['CTE'][$module][0];
+		} else if ($GLOBALS['TL_LANG']['CTE'][$table][0]) {
+			$label = $GLOBALS['TL_LANG']['CTE'][$table][0];
+		} else if($GLOBALS['TL_LANG']['MOD'][$module][0]) {
+			$label = $GLOBALS['TL_LANG']['MOD'][$module][0];
+        } else if($GLOBALS['TL_LANG']['MOD'][$table][0]) {
+			$label = $GLOBALS['TL_LANG']['MOD'][$table][0];
+		}
+
+		return $label;
+
     }
 
 

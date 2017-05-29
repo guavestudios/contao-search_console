@@ -90,3 +90,11 @@ $GLOBALS['search_console']['modules']['module'] = array(
     'enableGoTo' => false,
     'customSearch' => array('\Guave\SearchConsole\Modules\CustomSearch', 'customSearchModule')
 );
+
+//$GLOBALS['search_console']['modules']['themes'] = array(
+//    'shortcut' => 't',
+//    'enableNew' => true,
+//    'enableGoTo' => true,
+//    'defaultSearchFields' => array('id', 'name'),
+//    'module' => 'tl_theme'
+//);
