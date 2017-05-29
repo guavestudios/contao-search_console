@@ -190,7 +190,7 @@ class SearchConsole extends \BackendModule
                                     . '&rt=' . \RequestToken::get();
                             }
 
-                            $linkString .= '<a href="' . $link . '">'. $name. '</a>';
+                            $linkString .= '<a data-activeModule="'.$activeModule.'" href="' . $link . '">'. $name. '</a>';
 
 
                             $counter++;

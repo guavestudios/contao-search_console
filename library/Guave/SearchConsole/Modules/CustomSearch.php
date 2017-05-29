@@ -17,7 +17,7 @@ class CustomSearch extends SearchConsole {
                                 module.pid,
                                 module.name,
                                 "tl_themes" AS ptable,
-                                "themes" AS module,
+                                "modules" AS module,
                                 "'.$this->getLabelOfModule('module').'" AS label,
                                 "tl_module" AS tableName
                             FROM

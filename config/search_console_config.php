@@ -85,7 +85,7 @@ $GLOBALS['search_console']['modules']['pa'] = array(
 );
 
 $GLOBALS['search_console']['modules']['module'] = array(
-    'shortcut' => 'm',
+    'shortcut' => 'mod',
     'enableNew' => false,
     'enableGoTo' => false,
     'customSearch' => array('\Guave\SearchConsole\Modules\CustomSearch', 'customSearchModule')
