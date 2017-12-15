@@ -4,6 +4,8 @@
 namespace Guave\SearchConsole\Modules;
 
 
+use function Symfony\Component\HttpKernel\Tests\controller_func;
+
 class SearchConsole extends \BackendModule
 {
 
@@ -94,8 +96,33 @@ class SearchConsole extends \BackendModule
             //get last fragment
             $newSearch = $fragements[count($fragements)-1];
 
+
+
             $module = $this->getModuleByShortcut($fragements[0]);
             $fields = $this->getFields($newSearch, $module);
+
+
+            ////check for autocomplete from db field
+            if(strstr($newSearch,'=') !== false && $module) {
+                $dbFields = $this->getFields('',$module);
+
+                if($dbFields) {
+                    $dbAutocompleteExplode = explode('=', $newSearch, 2);
+                    foreach ($dbFields as $data) {
+                        if($data['value'] == $dbAutocompleteExplode[0]) {
+                            $autoCompleteFromDbField = $this->getAutocompleteFromDbField($this->getTableNameFromModule($module), $dbAutocompleteExplode[0], $dbAutocompleteExplode[1]);
+                            if(!empty($autoCompleteFromDbField)){
+                                $return['items'] = array_merge($return['items'], $autoCompleteFromDbField);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+
             if(!empty($fields)){
                 $return['items'] = array_merge($return['items'], $fields);
             }
@@ -778,6 +805,75 @@ class SearchConsole extends \BackendModule
 		}
 
 		return $label;
+
+    }
+
+    public function getTableNameFromModule($module)
+    {
+        global $GLOBALS;
+
+        $moduleArray = $GLOBALS['search_console']['modules'][$module];
+
+        $table = '';
+
+        if(strstr($moduleArray['module'], 'tl_') === false) {
+            $table = 'tl_'.$moduleArray['module'];
+        } else {
+            $table = $moduleArray['module'];
+        }
+        if($moduleArray['table']) {
+            $table = $moduleArray['table'];
+        }
+
+        return $table;
+
+
+    }
+
+    public function getAutocompleteFromDbField($table, $field, $search = null)
+    {
+
+        $query = '
+                SELECT
+                    '.$field.'
+                FROM
+                    '.$table.'
+                GROUP BY
+                    '.$field.'
+                LIMIT 
+                    20
+                ';
+
+        $result = \Database::getInstance()->prepare($query)->execute()->fetchAllAssoc();
+
+        $return = array();
+
+        if($result) {
+            foreach ($result as $data) {
+
+                if(!$data[$field]) {
+                    continue;
+                }
+
+                $return[] = array(
+                    'label' => $data[$field],
+                    'value' => $field.'='.$data[$field],
+                    'id' => $data[$field],
+                    'category' => 'fields',
+                );
+            }
+        }
+
+        //cleanup
+        if($search) {
+            foreach($return as $k => $v) {
+                if(substr($v['label'],0, strlen($search)) != $search) {
+                    unset($return[$k]);
+                }
+            }
+        }
+
+        return $return;
 
     }
 
