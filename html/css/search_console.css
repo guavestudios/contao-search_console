@@ -12,3 +12,14 @@
 #search_box_container {
     width: 100%;
 }
+
+#search_box_container #search_console {
+    margin-left: 15px;
+    margin-top: 10px;
+    width: 80%;
+}
+
+#search_console_help {
+    color:  #91979c;
+    cursor: pointer;
+}

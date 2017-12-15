@@ -9,6 +9,14 @@ class SearchConsole extends \BackendModule
 
     protected $modules = array();
 
+    protected $allowedSqlOperators = array(
+        '||',
+        'OR',
+        'AND',
+        '&&'
+    );
+
+
     /**
      * @return string
      */
@@ -353,7 +361,23 @@ class SearchConsole extends \BackendModule
                     $buildSelectFields = array();
 
 
+                    $i = 0;
                     foreach($fragments as $fragment) {
+
+                        $sqlOpperator = 'OR';
+
+                        if($i != 0) {
+                            if(in_array($fragments[$i-1], $this->allowedSqlOperators)) {
+                                $sqlOpperator = $fragments[$i-1];
+                            }
+                        }
+
+
+                        if(in_array($fragment, $this->allowedSqlOperators)) {
+                            $i++;
+                            continue;
+                        }
+
                         $fields = $this->getFields($fragment, $m);
 
                         $re = '/(.*)(=|>|<|!=)(.*)/';
@@ -364,13 +388,14 @@ class SearchConsole extends \BackendModule
                             $check = $this->getFields($matches[1], $m);
                             if($check) {
                                 if(isset($GLOBALS['TL_DCA'][$table]['fields'][$matches[1]])) {
-                                    if($matches[2] == '=') {
-                                        $buildSelectFields[] = $matches[1] . ' like ' . $this->getSqlEscape($matches[3], true);
+                                    if(strstr($matches[3], '%') !== false) {
+                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . ' like ' . $this->getSqlEscape($matches[3], true);
                                     } else {
-                                        $buildSelectFields[] = $matches[1] . $matches[2] . $this->getSqlEscape($matches[3]);
+                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . $matches[2] . $this->getSqlEscape($matches[3]);
                                     }
                                 }
                             }
+                            $i++;
                             continue;
                         }
 
@@ -378,17 +403,20 @@ class SearchConsole extends \BackendModule
                         foreach($fields as $field) {
                             if($field == $fragment) {
                                 if(isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
-                                    $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                                    $buildSelectFields[$sqlOpperator][] = $field . ' like '.$this->getSqlEscape($fragment, true);
                                 }
                             }
                         }
+                        $i++;
                     }
+
+                    $sqlOpperator = 'OR';
 
                     if(empty($buildSelectFields)) {
                         if ($moduleArray['defaultSearchFields']) {
                             foreach ($moduleArray['defaultSearchFields'] as $field) {
                                 if (isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
-                                    $buildSelectFields[] = $field . ' like ' . $this->getSqlEscape($fragment, true);
+                                    $buildSelectFields[$sqlOpperator][] = $field . ' like ' . $this->getSqlEscape($fragment, true);
                                 }
                             }
                         }
@@ -396,7 +424,18 @@ class SearchConsole extends \BackendModule
 
                     if(!empty($buildSelectFields)) {
                         $subQuery .= ' WHERE ';
-                        $subQuery .= implode(' OR ', $buildSelectFields);
+                        $i = 0;
+                        foreach ($buildSelectFields as $opperator => $wheres) {
+                            if($i != 0) {
+                                if(count($opperator) == 1) {
+                                    $subQuery .= ' '.$opperator.' ';
+                                } else {
+                                    $subQuery .= ' OR ';
+                                }
+                            }
+                            $subQuery .= '('.implode(' '.$opperator.' ', $wheres).')';
+                            $i++;
+                        }
                     }
                     $subQuery .= ' LIMIT 20';
 
