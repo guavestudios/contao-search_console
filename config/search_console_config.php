@@ -91,10 +91,34 @@ $GLOBALS['search_console']['modules']['module'] = array(
     'customSearch' => array('\Guave\SearchConsole\Modules\CustomSearch', 'customSearchModule')
 );
 
-//$GLOBALS['search_console']['modules']['themes'] = array(
-//    'shortcut' => 't',
-//    'enableNew' => true,
-//    'enableGoTo' => true,
-//    'defaultSearchFields' => array('id', 'name'),
-//    'module' => 'tl_theme'
-//);
+$GLOBALS['search_console']['modules']['files'] = array(
+    'shortcut' => 'files',
+    'enableNew' => false,
+    'enableGoTo' => true,
+    'module' => 'files',
+    'doNotSearch' => true
+);
+
+$GLOBALS['search_console']['modules']['themes'] = array(
+    'shortcut' => 'themes',
+    'enableNew' => true,
+    'enableGoTo' => true,
+    'defaultSearchFields' => array('id', 'name'),
+    'module' => 'themes'
+);
+
+$GLOBALS['search_console']['modules']['logs'] = array(
+    'shortcut' => 'log',
+    'enableNew' => false,
+    'enableGoTo' => true,
+    'module' => 'log',
+    'doNotSearch' => true
+);
+
+$GLOBALS['search_console']['modules']['settings'] = array(
+    'shortcut' => 'settings',
+    'enableNew' => false,
+    'enableGoTo' => true,
+    'module' => 'settings',
+    'doNotSearch' => true
+);

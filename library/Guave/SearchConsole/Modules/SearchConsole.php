@@ -99,7 +99,9 @@ class SearchConsole extends \BackendModule
 
 
             $module = $this->getModuleByShortcut($fragements[0]);
-            $fields = $this->getFields($newSearch, $module);
+            if(count($fragements) > 1) {
+                $fields = $this->getFields($newSearch, $module);
+            }
 
 
             ////check for autocomplete from db field
@@ -586,7 +588,7 @@ class SearchConsole extends \BackendModule
             //go to
             if($data['enableGoTo']) {
                 $return[] = array(
-                    'label' => 'g '.$data['shortcut'].'-'.$data['label'],
+                    'label' => 'go to '.$data['label'].'(g '.$data['shortcut'].')',
                     'value' => 'g '.$data['shortcut'],
                     'id' => 'g '.$data['shortcut'],
                     'category' => 'cmd',
@@ -598,7 +600,7 @@ class SearchConsole extends \BackendModule
             //new
             if($data['enableNew']) {
                 $return[] = array(
-                    'label' => 'n '.$data['shortcut'].'-'.$data['label'],
+                    'label' => 'new '.$data['label'].'(n '.$data['shortcut'].')',
                     'value' => 'n '.$data['shortcut'],
                     'id' => 'n '.$data['shortcut'],
                     'category' => 'cmd',
@@ -794,12 +796,12 @@ class SearchConsole extends \BackendModule
         $label = '';
         if ($module == 'tl_content') {
             $label = $GLOBALS['TL_LANG']['CTE']['alias'][0];
+        } else if($GLOBALS['TL_LANG']['MOD'][$module][0]) {
+            $label = $GLOBALS['TL_LANG']['MOD'][$module][0];
         } else if ($GLOBALS['TL_LANG']['CTE'][$module][0]) {
 			$label = $GLOBALS['TL_LANG']['CTE'][$module][0];
 		} else if ($GLOBALS['TL_LANG']['CTE'][$table][0]) {
-			$label = $GLOBALS['TL_LANG']['CTE'][$table][0];
-		} else if($GLOBALS['TL_LANG']['MOD'][$module][0]) {
-			$label = $GLOBALS['TL_LANG']['MOD'][$module][0];
+            $label = $GLOBALS['TL_LANG']['CTE'][$table][0];
         } else if($GLOBALS['TL_LANG']['MOD'][$table][0]) {
 			$label = $GLOBALS['TL_LANG']['MOD'][$table][0];
 		}
