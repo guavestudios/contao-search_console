@@ -59,7 +59,7 @@
                     response( data.items );
                 });
             },
-            minLength: 1,
+            minLength: 0,
             noCache: true,
             focus: function() {
                 // prevent value inserted on focus
