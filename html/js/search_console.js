@@ -7,7 +7,6 @@
             '<form action="'+window.location.pathname+'?do=search_console&ref='+Contao.referer_id+'" method="post">' +
             '<input placeholder="search|cmd" type="text" id="search_console" name="search_console" value="" />' +
             '<input type="hidden" name="REQUEST_TOKEN" id="search_console_request_token" value="'+Contao.request_token+'" />' +
-            '<span id="search_console_help">?</span>' +
             '</form>' +
             '</div>'));
 
@@ -67,6 +66,13 @@
                 return false;
             },
             select: function( event, ui ) {
+
+                if(ui.item.action) {
+                    if(ui.item.action == 'redirect') {
+                        self.location.href = ui.item.url;
+                    }
+                }
+
                 var terms = split( this.value );
 
                 // remove the current input
@@ -81,12 +87,6 @@
                 return false;
             }
         });
-
-        $('#search_console_help').on('click', function ()
-            {
-                alert('todo help');
-            }
-        );
 
     });
 
