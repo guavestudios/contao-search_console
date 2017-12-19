@@ -5,7 +5,7 @@ namespace Guave\SearchConsole\Modules;
 
 class CustomSearch extends SearchConsole {
 
-    public function customSearchModule($search)
+    public function customSearchModule($search, &$params)
     {
 
         $fragments = explode(' ', $search);
@@ -32,15 +32,17 @@ class CustomSearch extends SearchConsole {
                     $field = $f['id'];
                     if($field == $fragment) {
                         if(isset($GLOBALS['TL_DCA']['tl_article']['fields'][$field])) {
-                            $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                            $buildSelectFields[] = $field . ' like '.$this->getLikeSql($fragment);
                         }
                     }
                 }
             }
 
             if(empty($buildSelectFields)) {
-                $buildSelectFields[] = 'module.id like '.$this->getSqlEscape($fragment, true);
-                $buildSelectFields[] = 'module.name like '.$this->getSqlEscape($fragment, true);
+                $buildSelectFields[] = 'module.id like ?';
+                $buildSelectFields[] = 'module.name like ?';
+                $params[] = $this->getLikeSql($fragment);
+                $params[] = $this->getLikeSql($fragment);
             }
 
             $moduleQuery .= ' WHERE ';
@@ -52,8 +54,13 @@ class CustomSearch extends SearchConsole {
         }
 
     }
-    
-    public function customSearchPageArticle($search)
+
+    /**
+     * @param string $search
+     * @param array $params
+     * @return string
+     */
+    public function customSearchPageArticle($search, &$params)
     {
 
         $fragments = explode(' ', $search);
@@ -69,14 +76,18 @@ class CustomSearch extends SearchConsole {
                     $field = $f['id'];
                     if($field == $fragment) {
                         if(isset($GLOBALS['TL_DCA']['tl_article']['fields'][$field])) {
-                            $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                            $buildSelectFields[] = $field . ' like ?';
+                            $params[] = $this->getLikeSql($fragment);
                         }
                     }
                 }
             } else {
-                $buildSelectFields[] = 'a.id like '.$this->getSqlEscape($fragment, true);
-                $buildSelectFields[] = 'a.title like '.$this->getSqlEscape($fragment, true);
-                $buildSelectFields[] = 'a.alias like '.$this->getSqlEscape($fragment, true);
+                $buildSelectFields[] = 'a.id like ?';
+                $buildSelectFields[] = 'a.title like ?';
+                $buildSelectFields[] = 'a.alias like ?';
+                $params[] = $this->getLikeSql($fragment);
+                $params[] = $this->getLikeSql($fragment);
+                $params[] = $this->getLikeSql($fragment);
             }
 
             if(!empty($buildSelectFields)) {
@@ -95,14 +106,18 @@ class CustomSearch extends SearchConsole {
                     $field = $f['id'];
                     if($field == $fragment) {
                         if(isset($GLOBALS['TL_DCA']['tl_page']['fields'][$field])) {
-                            $buildSelectFields[] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                            $buildSelectFields[] = $field . ' like ?';
+                            $params[] = $this->getLikeSql($fragment);
                         }
                     }
                 }
             } else {
-                $buildSelectFields[] = 'p.id like '.$this->getSqlEscape($fragment, true);
-                $buildSelectFields[] = 'p.title like '.$this->getSqlEscape($fragment, true);
-                $buildSelectFields[] = 'p.alias like '.$this->getSqlEscape($fragment, true);
+                $buildSelectFields[] = 'p.id like ?';
+                $buildSelectFields[] = 'p.title like ?';
+                $buildSelectFields[] = 'p.alias like ?';
+                $params[] = $this->getLikeSql($fragment);
+                $params[] = $this->getLikeSql($fragment);
+                $params[] = $this->getLikeSql($fragment);
             }
 
             if(!empty($buildSelectFields)) {

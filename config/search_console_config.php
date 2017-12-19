@@ -104,7 +104,8 @@ $GLOBALS['search_console']['modules']['themes'] = array(
     'enableNew' => true,
     'enableGoTo' => true,
     'defaultSearchFields' => array('id', 'name'),
-    'module' => 'themes'
+    'module' => 'themes',
+    'table' => 'tl_theme',
 );
 
 $GLOBALS['search_console']['modules']['logs'] = array(

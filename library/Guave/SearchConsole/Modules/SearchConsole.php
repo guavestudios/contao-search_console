@@ -11,6 +11,11 @@ class SearchConsole extends \BackendModule
 
     protected $modules = array();
 
+    /**
+     * @var null|string
+     */
+    protected $query = null;
+
     protected $allowedSqlOperators = array(
         '||',
         'OR',
@@ -129,120 +134,117 @@ class SearchConsole extends \BackendModule
                 $return['items'] = array_merge($return['items'], $fields);
             }
 
-            $query = $this->buildQuery($search, $module);
-            $return['query'] = $query;
-            if($query) {
-                $data = \Database::getInstance()->query($query)->fetchAllAssoc();
+            $data = $this->buildQueryAndGetData($search, $module);
+            $return['query'] = $this->getQuery();
+            if($data) {
                 $return['resultCount'] = count($data);
-                if($data) {
 
-                    foreach($data as &$v) {
+                foreach($data as &$v) {
 
-                        \Controller::loadDataContainer($v['tableName']);
-                        $links = array();
+                    \Controller::loadDataContainer($v['tableName']);
+                    $links = array();
 
-                        if($GLOBALS['TL_DCA'][$v['tableName']]['fields']['pid'] && $v['pid']) {
+                    if($GLOBALS['TL_DCA'][$v['tableName']]['fields']['pid'] && $v['pid']) {
 
-                            $parents = array();
+                        $parents = array();
 
-                            if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5) { //treeview
-                                $parents = $this->getParentElements($v['pid'], $v['tableName'], $v['module']);
-                            } else if($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] || $v['ptable']) {
-                                $pTable = ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'];
-                                $parents = $this->getParentElements($v['pid'], $pTable, str_replace('tl_', '',$pTable));
+                        if($GLOBALS['TL_DCA'][$v['tableName']]['list']['sorting']['mode'] == 5) { //treeview
+                            $parents = $this->getParentElements($v['pid'], $v['tableName'], $v['module']);
+                        } else if($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] || $v['ptable']) {
+                            $pTable = ($GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable']) ? $GLOBALS['TL_DCA'][$v['tableName']]['config']['ptable'] : $v['ptable'];
+                            $parents = $this->getParentElements($v['pid'], $pTable, str_replace('tl_', '',$pTable));
 
-                            }
-
-                            if(!empty($parents)) {
-                                krsort($parents);
-                                foreach ($parents as $parent) {
-                                    $links[] = $parent;
-                                }
-                            }
                         }
 
-
-                        #original link
-                        if($v['module'] == 'theme') {
-                            $v['module'] = 'themes';
-                        }
-                        $links[] = $v;
-
-                        $linkString = '';
-                        $activeModule = null;
-                        $counter = 0;
-                        $linksCount = count($links);
-
-                        for($i = 0; $i < $linksCount; $i++) {
-                            if($activeModule != $links[$i]['module']) {
-                                if($activeModule != null) {
-                                    $linkString .= ' | ';
-                                }
-
-                                if(!$links[$i]['label'] || strlen($links[$i]['label']) == 1) {
-                                    $links[$i]['label'] = $links[$i]['module'];
-                                }
-
-                                $linkString.= '<strong>'.$links[$i]['label'].'</strong>: ';
-                                $activeModule = $links[$i]['module'];
-                            } else {
-                                if($counter <= $linksCount) {
-                                    $linkString .= ' < ';
-                                }
+                        if(!empty($parents)) {
+                            krsort($parents);
+                            foreach ($parents as $parent) {
+                                $links[] = $parent;
                             }
-
-
-                            \Controller::loadDataContainer($links[$i]['tableName']);
-
-
-                            $name = (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']);
-                            foreach ($fragements as $fragement) {
-
-                                $name =  preg_replace('#'. preg_quote($fragement) .'#i', '<mark>\\0</mark>', $name);
-
-                            }
-
-                            if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
-
-                                $do = str_replace('tl_', '', $pTable);
-                                if($do == 'theme') {
-                                    $do = 'themes';
-                                };
-
-                                $link = $this->getBaseUrl()
-                                    . '?do=' . str_replace('tl_', '', $do)
-                                    . '&table=' . $links[$i]['tableName'] . '&act=edit&id=' . $links[$i]['id']
-                                    . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get();
-                            } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
-                                $link = $this->getBaseUrl()
-                                    . '?do=' . $links[$i]['module']
-                                    . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
-                                    . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get();
-                            } else {
-                                $link = $this->getBaseUrl()
-                                    . '?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
-                                    . '&ref=' . TL_REFERER_ID
-                                    . '&rt=' . \RequestToken::get();
-                            }
-
-                            $linkString .= '<a data-activeModule="'.$activeModule.'" href="' . $link . '">'. $name. '</a>';
-
-
-                            $counter++;
-                        }
-
-
-                        $v['links'] = $linkString;
-                        if(!empty($links)) {
-                            $v['link'] = $link;
                         }
                     }
 
-                    $template->results = $data;
-                    $return['results'] = $data;
+
+                    #original link
+                    if($v['module'] == 'theme') {
+                        $v['module'] = 'themes';
+                    }
+                    $links[] = $v;
+
+                    $linkString = '';
+                    $activeModule = null;
+                    $counter = 0;
+                    $linksCount = count($links);
+
+                    for($i = 0; $i < $linksCount; $i++) {
+                        if($activeModule != $links[$i]['module']) {
+                            if($activeModule != null) {
+                                $linkString .= ' | ';
+                            }
+
+                            if(!$links[$i]['label'] || strlen($links[$i]['label']) == 1) {
+                                $links[$i]['label'] = $links[$i]['module'];
+                            }
+
+                            $linkString.= '<strong>'.$links[$i]['label'].'</strong>: ';
+                            $activeModule = $links[$i]['module'];
+                        } else {
+                            if($counter <= $linksCount) {
+                                $linkString .= ' < ';
+                            }
+                        }
+
+
+                        \Controller::loadDataContainer($links[$i]['tableName']);
+
+
+                        $name = (($links[$i]['name']) ? $links[$i]['name'] : $links[$i]['id']);
+                        foreach ($fragements as $fragement) {
+
+                            $name =  preg_replace('#'. preg_quote($fragement) .'#i', '<mark>\\0</mark>', $name);
+
+                        }
+
+                        if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 4) { //display child record
+
+                            $do = str_replace('tl_', '', $pTable);
+                            if($do == 'theme') {
+                                $do = 'themes';
+                            };
+
+                            $link = $this->getBaseUrl()
+                                . '?do=' . str_replace('tl_', '', $do)
+                                . '&table=' . $links[$i]['tableName'] . '&act=edit&id=' . $links[$i]['id']
+                                . '&ref=' . TL_REFERER_ID
+                                . '&rt=' . \RequestToken::get();
+                        } else if($GLOBALS['TL_DCA'][$links[$i]['tableName']]['list']['sorting']['mode'] == 6) { //Displays the child records within a tree structure
+                            $link = $this->getBaseUrl()
+                                . '?do=' . $links[$i]['module']
+                                . '&table=' . $GLOBALS['TL_DCA'][$links[$i]['tableName']]['config']['ctable'][0] . '&id=' . $links[$i]['id']
+                                . '&ref=' . TL_REFERER_ID
+                                . '&rt=' . \RequestToken::get();
+                        } else {
+                            $link = $this->getBaseUrl()
+                                . '?do=' . $links[$i]['module'] . '&act=edit&id=' . $links[$i]['id']
+                                . '&ref=' . TL_REFERER_ID
+                                . '&rt=' . \RequestToken::get();
+                        }
+
+                        $linkString .= '<a data-activeModule="'.$activeModule.'" href="' . $link . '">'. $name. '</a>';
+
+
+                        $counter++;
+                    }
+
+
+                    $v['links'] = $linkString;
+                    if(!empty($links)) {
+                        $v['link'] = $link;
+                    }
                 }
+
+                $template->results = $data;
+                $return['results'] = $data;
             }
         }
 
@@ -315,11 +317,13 @@ class SearchConsole extends \BackendModule
 
    }
 
-    protected function buildQuery($search, $module = null, $fields = array()) {
+    protected function buildQueryAndGetData($search, $module = null, $fields = array()) {
 
         global $GLOBALS;
 
         $queries = array();
+
+        $params = array();
 
         foreach ($this->modules as $m => $data) {
             if($module) {
@@ -328,7 +332,6 @@ class SearchConsole extends \BackendModule
                 }
             }
 
-            $params = array();
             $moduleArray = $GLOBALS['search_console']['modules'][$m];
 
             if($moduleArray['doNotSearch']) {
@@ -353,7 +356,7 @@ class SearchConsole extends \BackendModule
 
 
             if (isset($moduleArray['customSearch']) && is_array($moduleArray['customSearch'])) { //do custom query?
-                $subQuery = \System::importStatic($moduleArray['customSearch'][0])->{$moduleArray['customSearch'][1]}($search);
+                $subQuery = \System::importStatic($moduleArray['customSearch'][0])->{$moduleArray['customSearch'][1]}($search, $params);
                 if($subQuery) {
                     $queries[] = '('.$subQuery.')';
                 }
@@ -418,9 +421,11 @@ class SearchConsole extends \BackendModule
                             if($check) {
                                 if(isset($GLOBALS['TL_DCA'][$table]['fields'][$matches[1]])) {
                                     if(strstr($matches[3], '%') !== false) {
-                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . ' like ' . $this->getSqlEscape($matches[3], true);
+                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . ' like ?';
+                                        $params[] = $this->getLikeSql($matches[3]);
                                     } else {
-                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . $matches[2] . $this->getSqlEscape($matches[3]);
+                                        $buildSelectFields[$sqlOpperator][] = $matches[1] . $matches[2] .'?';
+                                        $params[] = $matches[3];
                                     }
                                 }
                             }
@@ -432,7 +437,8 @@ class SearchConsole extends \BackendModule
                         foreach($fields as $field) {
                             if($field == $fragment) {
                                 if(isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
-                                    $buildSelectFields[$sqlOpperator][] = $field . ' like '.$this->getSqlEscape($fragment, true);
+                                    $buildSelectFields[$sqlOpperator][] = $field . ' like ?';
+                                    $params[] = $this->getLikeSql($fragment);
                                 }
                             }
                         }
@@ -445,7 +451,8 @@ class SearchConsole extends \BackendModule
                         if ($moduleArray['defaultSearchFields']) {
                             foreach ($moduleArray['defaultSearchFields'] as $field) {
                                 if (isset($GLOBALS['TL_DCA'][$table]['fields'][$field])) {
-                                    $buildSelectFields[$sqlOpperator][] = $field . ' like ' . $this->getSqlEscape($fragment, true);
+                                    $buildSelectFields[$sqlOpperator][] = $field . ' like ?' ;
+                                    $params[] = $this->getLikeSql($fragment);
                                 }
                             }
                         }
@@ -479,11 +486,21 @@ class SearchConsole extends \BackendModule
             $query = 'SELECT allData.* FROM (';
             $query .= implode(' UNION ', $queries);
             $query .= ') AS allData LIMIT 20';
+
+            if($_GET['debugQuery']) {
+                echo $query;
+                var_dump($params);
+                exit;
+            }
+
+            $result = \Database::getInstance()->prepare($query)->execute($params);
+            $this->query = $result->query;
+            $data = $result->fetchAllAssoc();
+            return $data;
+
         } else {
             return null;
         }
-
-        return $query;
 
     }
 
@@ -501,23 +518,9 @@ class SearchConsole extends \BackendModule
         \Controller::loadDataContainer();
     }
 
-    public function getSqlEscape($str, $like = false)
+    public function getLikeSql($str)
     {
-
-        if(is_integer($str)) {
-            if($like) {
-                return '%'.$str.'%';
-            } else {
-                return $str;
-            }
-        } else {
-            if($like) {
-                return '"%'.$str.'%"';
-            } else {
-                return '"'.$str.'"';
-            }
-        }
-
+        return '%'.$str.'%';
     }
 
     public function search($action) {
@@ -571,6 +574,14 @@ class SearchConsole extends \BackendModule
 
         return $this->modules;
 
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getQuery()
+    {
+        return $this->query;
     }
 
     protected function compile()
