@@ -560,7 +560,7 @@ class SearchConsole extends \BackendModule
                     	if($data['table'] || $data['module']) {
 	                        $label = $this->getLabelOfModule(($data['table']) ? $data['table'] : $data['module']);
     	                    $data['label'] = $label;
-						}
+                        }
                         $modules[$module] = $data;
                     }
                 }
@@ -748,10 +748,14 @@ class SearchConsole extends \BackendModule
     public function injectJavascript($buffer, $template)
     {
 
+        $user = \BackendUser::getInstance();
+        if(!$user->authenticate()) {
+            return $buffer;
+        }
 
-//		if(!\BackendUser::getInstance()->authenticate()) {
-//			return $buffer;
-//		}
+        if(!$user->enableSearchConsole) {
+            return $buffer;
+        }
 
 		$hasJquery = strstr($buffer, 'jquery.');
         $hasJqueryUi = strstr($buffer, 'jquery-ui.');
