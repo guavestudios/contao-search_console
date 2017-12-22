@@ -1,5 +1,5 @@
 {
-  "name":"guave/search-console",
+  "name":"guave/contao-search-console",
   "description":"add a search for any module and some special shortcuts to the admin",
   "keywords":["contao", "search-console"],
   "type":"contao-module",
